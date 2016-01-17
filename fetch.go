@@ -53,12 +53,7 @@ func getContentType(header *http.Header) ContentType {
 }
 
 type Fetcher struct {
-	Filters []Filter
-}
-
-type Filter interface {
-	FilterURL(url *url.URL) bool
-	FilterFile(*Download) bool
+	config *Configuration
 }
 
 func isDocumentType(download *Download) bool {
@@ -78,7 +73,7 @@ func (f *Fetcher) Fetch(link string) (*Download, error) {
 		return nil, err
 	}
 
-	for _, filter := range f.Filters {
+	for _, filter := range f.config.Filters {
 		if !filter.FilterURL(fileURL) {
 			return nil, fmt.Errorf("URL filter, %v, failed")
 		}
@@ -115,7 +110,7 @@ func (f *Fetcher) Fetch(link string) (*Download, error) {
 	fmt.Printf("----->%v\n", mime.TypeByExtension(filepath.Ext(download.Filename)))
 	download.Type = mime.TypeByExtension(filepath.Ext(download.Filename))
 
-	for _, filter := range f.Filters {
+	for _, filter := range f.config.Filters {
 		if !filter.FilterFile(download) {
 			return nil, fmt.Errorf("File filter, %v, failed")
 		}
