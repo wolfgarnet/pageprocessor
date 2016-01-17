@@ -96,12 +96,14 @@ func (f *Fetcher) Fetch(link string) (*Download, error) {
 
 	resp, err := check.Get(link) // add a filter to check redirect
 
-	//disposition := resp.Header.Get("Content-Disposition")
-	fmt.Printf("DISPO: %v\n", resp.Header)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+
+	//disposition := resp.Header.Get("Content-Disposition")
+	fmt.Printf("DISPO: %v\n", resp.Header)
 
 	//resp.
 

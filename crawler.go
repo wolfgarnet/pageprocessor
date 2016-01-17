@@ -48,30 +48,34 @@ type DeadEnd struct {
 
 }
 
-func (d *PageResult) DeadEnd() CrawlResult {
+func (d *DeadEnd) Process() CrawlResult {
+	return nil
+}
+
+type Failure struct {
+	Error error
+}
+
+func (d *Failure) Process() CrawlResult {
 	return nil
 }
 
 func (c *Crawler) Crawl(url string) (result CrawlResult) {
 	download, err := c.Fetcher.Fetch(url)
 	if err != nil {
-		fmt.Errorf("Failed, %v\n", err.Error())
-		return
+		return &Failure{err}
 	}
 
 	if isDocumentType(download) {
 		parser, err := ParseHtml(download.bytes.String())
 		if err != nil {
 			fmt.Errorf("Failed, %v\n", err.Error())
-			return
+			return &Failure{err}
 		}
 
-		result = PageResult{parser.Links, parser.Images}
-
-		fmt.Printf("Links : %v\n", len(parser.Links))
-		fmt.Printf("Images: %v\n", len(parser.Images))
+		result = &PageResult{parser.Links, parser.Images}
 	} else {
-		result := DownloadableResult{download}
+		result := &DownloadableResult{download}
 		result.Content = download
 	}
 
