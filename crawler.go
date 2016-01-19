@@ -67,6 +67,7 @@ func (c *Crawler) Crawl(url string) (result CrawlResult) {
 	}
 
 	if isDocumentType(download) {
+		fmt.Printf("PAGE\n")
 		parser, err := ParseHtml(download.bytes.String())
 		if err != nil {
 			fmt.Errorf("Failed, %v\n", err.Error())
@@ -75,8 +76,8 @@ func (c *Crawler) Crawl(url string) (result CrawlResult) {
 
 		result = &PageResult{parser.Links, parser.Images}
 	} else {
-		result := &DownloadableResult{download}
-		result.Content = download
+		fmt.Printf("DOWNLOAD\n")
+		result = &DownloadableResult{download}
 	}
 
 	return
