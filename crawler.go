@@ -3,10 +3,33 @@ package html2
 import (
 	"fmt"
 	"net/url"
+	"io/ioutil"
 )
 
+type Filters struct  {
+	URLFilters []URLFilter
+	FileFilters []FileFilter
+	FollowRules []FollowRule
+}
+
+func NewFilters() *Filters {
+	filters := &Filters{
+		URLFilters:make([]URLFilter, 0),
+		FileFilters:make([]FileFilter, 0),
+		FollowRules:make([]FollowRule, 0),
+	}
+
+	return filters
+}
+
 type Configuration struct {
-	Filters []Filter
+	Filters *Filters
+}
+
+func NewConfiguration() *Configuration {
+	return &Configuration{
+		Filters:NewFilters(),
+	}
 }
 
 type Crawler struct {
@@ -14,9 +37,16 @@ type Crawler struct {
 	Config *Configuration
 }
 
-type Filter interface {
+type URLFilter interface {
 	FilterURL(url *url.URL) bool
+}
+
+type FileFilter interface {
 	FilterFile(*Download) bool
+}
+
+type FollowRule interface {
+	Follow(url *url.URL) bool
 }
 
 func NewCrawler(config *Configuration) *Crawler {
@@ -29,6 +59,15 @@ type CrawlResult interface {
 
 type DownloadableResult struct {
 	Content *Download
+}
+
+func (d *DownloadableResult) Download(path string) {
+	target := path + d.Content.Filename
+	fmt.Printf("Writing to %v\n", target)
+	err := ioutil.WriteFile(target, d.Content.bytes.Bytes(), 0644)
+	if err != nil {
+		fmt.Printf("WHAAAAAAT!? %v\n", err)
+	}
 }
 
 func (d *DownloadableResult) Process() CrawlResult {
@@ -74,7 +113,20 @@ func (c *Crawler) Crawl(url string) (result CrawlResult) {
 			return &Failure{err}
 		}
 
-		result = &PageResult{parser.Links, parser.Images}
+		ir := &PageResult{}
+		for _, link := range parser.Links  {
+			for _, rule := range c.Config.Filters.FollowRules {
+				if rule.Follow(link.URL) {
+					ir.Links = append(ir.Links, link)
+				}
+			}
+		}
+
+		for _, img := range parser.Images {
+			ir.Images = append(ir.Images, img)
+		}
+
+		result = ir
 	} else {
 		fmt.Printf("DOWNLOAD\n")
 		result = &DownloadableResult{download}

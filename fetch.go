@@ -73,7 +73,7 @@ func (f *Fetcher) Fetch(link string) (*Download, error) {
 		return nil, err
 	}
 
-	for _, filter := range f.config.Filters {
+	for _, filter := range f.config.Filters.URLFilters {
 		if !filter.FilterURL(fileURL) {
 			return nil, fmt.Errorf("URL filter, %v, failed")
 		}
@@ -112,7 +112,7 @@ func (f *Fetcher) Fetch(link string) (*Download, error) {
 	fmt.Printf("----->%v\n", mime.TypeByExtension(filepath.Ext(download.Filename)))
 	download.Type = mime.TypeByExtension(filepath.Ext(download.Filename))
 
-	for _, filter := range f.config.Filters {
+	for _, filter := range f.config.Filters.FileFilters {
 		if !filter.FilterFile(download) {
 			return nil, fmt.Errorf("File filter, %v, failed")
 		}

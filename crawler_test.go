@@ -7,7 +7,7 @@ import (
 )
 
 func TestCrawler_1(t *testing.T) {
-	config := &Configuration{}
+	config := NewConfiguration()
 	crawler := NewCrawler(config)
 	result := crawler.Crawl("http://www.ejbyurterne.dk/index.php")
 
@@ -21,7 +21,7 @@ func TestCrawler_1(t *testing.T) {
 }
 
 func TestCrawler_2(t *testing.T) {
-	config := &Configuration{}
+	config := NewConfiguration()
 	crawler := NewCrawler(config)
 	result := crawler.Crawl("http://www.ejbyurterne.dk/graphics/logo.jpg")
 
@@ -36,5 +36,6 @@ func TestCrawler_2(t *testing.T) {
 
 	case *DownloadableResult:
 		println("REUSLT:", len(r.Content.bytes.Bytes()))
+		r.Download("temp/")
 	}
 }

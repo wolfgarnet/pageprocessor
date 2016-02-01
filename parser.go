@@ -4,6 +4,8 @@ import (
 	"golang.org/x/net/html"
 	"io"
 	"strings"
+	"net/url"
+	"fmt"
 )
 
 
@@ -27,7 +29,7 @@ type (
 	}
 
 	Link struct {
-		Link string
+		URL *url.URL
 	}
 )
 
@@ -63,6 +65,7 @@ func (hp *HtmlParser) parse(node *html.Node) {
 		case "a":
 			println("HEJ", node.Attr[0].Key)
 			link := hp.parseLink(node)
+
 			hp.Links = append(hp.Links, link)
 
 		case "img":
@@ -92,7 +95,13 @@ func (hp *HtmlParser) parseLink(node *html.Node) *Link {
 		return nil
 	}
 
-	return &Link{href}
+	url, err := url.Parse(href)
+	if err != nil {
+		fmt.Errorf("%v skipped, %err\n", href, err)
+		return nil
+	}
+
+	return &Link{url}
 }
 
 func (hp *HtmlParser) parseImg(node *html.Node) *Img {
