@@ -16,7 +16,8 @@ func TestCrawler_1(t *testing.T) {
 		fmt.Printf("FAILED: %v\n", r.Error.Error())
 
 	case *PageResult:
-		println("REUSLT:", len(r.Images))
+		println("REUSLT I:", len(r.Images))
+		println("REUSLT L:", len(r.Links))
 	}
 }
 
@@ -32,6 +33,7 @@ func TestCrawler_2(t *testing.T) {
 		fmt.Printf("FAILED: %v\n", r.Error.Error())
 
 	case *PageResult:
+		r.Process()
 		println("REUSLT:", len(r.Images))
 
 	case *DownloadableResult:

@@ -126,6 +126,10 @@ func (c *Crawler) Crawl(url string) (result CrawlResult) {
 			ir.Images = append(ir.Images, img)
 		}
 
+		for _, link := range parser.Links {
+			ir.Links = append(ir.Links, link)
+		}
+
 		result = ir
 	} else {
 		fmt.Printf("DOWNLOAD\n")

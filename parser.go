@@ -59,15 +59,13 @@ func (hp *HtmlParser) parseReader(src io.Reader) error {
 }
 
 func (hp *HtmlParser) parse(node *html.Node) {
-
 	if node.Type == html.ElementNode {
 		switch node.Data {
 		case "a":
-			println("HEJ", node.Attr[0].Key)
+			println("HEJ", node.Attr[0].Val)
 			link := hp.parseLink(node)
 
 			hp.Links = append(hp.Links, link)
-
 		case "img":
 			img := hp.parseImg(node)
 			hp.Images = append(hp.Images, img)
@@ -91,13 +89,14 @@ func findAttr(key string, attributes []html.Attribute) string {
 
 func (hp *HtmlParser) parseLink(node *html.Node) *Link {
 	href := findAttr("href", node.Attr)
+	fmt.Printf("HREF= %v\n", href)
 	if href == "" {
 		return nil
 	}
 
 	url, err := url.Parse(href)
 	if err != nil {
-		fmt.Errorf("%v skipped, %err\n", href, err)
+		fmt.Printf("%v skipped, %err\n", href, err)
 		return nil
 	}
 
