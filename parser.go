@@ -25,7 +25,7 @@ type Entity interface {
 
 type (
 	Img struct {
-		Url string
+		URL *url.URL
 	}
 
 	Link struct {
@@ -110,5 +110,11 @@ func (hp *HtmlParser) parseImg(node *html.Node) *Img {
 		return nil
 	}
 
-	return &Img{src}
+	url, err := url.Parse(src)
+	if err != nil {
+		fmt.Printf("%v skipped, %err\n", src, err)
+		return nil
+	}
+
+	return &Img{url}
 }

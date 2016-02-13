@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"io/ioutil"
+	"strings"
 )
 
 type Filters struct  {
@@ -99,8 +100,13 @@ func (d *Failure) Process() CrawlResult {
 	return nil
 }
 
-func (c *Crawler) Crawl(url string) (result CrawlResult) {
-	download, err := c.Fetcher.Fetch(url)
+func (c *Crawler) Crawl(urlString string) (result CrawlResult) {
+	fmt.Printf("Crawling %v\n", urlString)
+	fileURL, err := url.Parse(urlString)
+	if err != nil {
+		return &Failure{err}
+	}
+	download, err := c.Fetcher.Fetch(fileURL)
 	if err != nil {
 		return &Failure{err}
 	}
@@ -123,11 +129,19 @@ func (c *Crawler) Crawl(url string) (result CrawlResult) {
 		}
 
 		for _, img := range parser.Images {
-			ir.Images = append(ir.Images, img)
+			realURL, err := combineURL(fileURL, img.URL)
+			if err != nil {
+				fmt.Printf("Failed to add %v, %v\n", img.URL, err)
+			}
+			ir.Images = append(ir.Images, &Img{realURL})
 		}
 
 		for _, link := range parser.Links {
-			ir.Links = append(ir.Links, link)
+			realURL, err := combineURL(fileURL, link.URL)
+			if err != nil {
+				fmt.Printf("Failed to add %v, %v\n", link.URL, err)
+			}
+			ir.Links = append(ir.Links, &Link{realURL})
 		}
 
 		result = ir
@@ -139,4 +153,40 @@ func (c *Crawler) Crawl(url string) (result CrawlResult) {
 	return
 }
 
+func combineURL(base, sub *url.URL) (*url.URL, error) {
+	if len(sub.Scheme) == 0 {
+		if strings.HasPrefix(sub.String(), "/") {
+			return url.Parse(base.Host + sub.String())
+		} else {
+			if strings.HasSuffix(base.String(), "/") {
+				return url.Parse(base.String() + sub.String())
+			} else {
+				pos := strings.LastIndex(base.Path, "/")
+				var t string
+				if pos < 0 {
+					t = base.String()
+				} else {
+					t = base.String()[:(len(base.String())-1-(len(base.Path)-pos+len(base.RawQuery)))]
+				}
+				return url.Parse(t + "/" + sub.String())
+			}
+		}
+	} else {
+		return sub, nil
+	}
+}
 
+func getNthIndex(s, t string, n int) int {
+	for {
+		pos := strings.LastIndex(s, t)
+		if pos < 0 {
+			return pos
+		}
+		n--
+		if n == 0 {
+			return pos
+		}
+
+		s = s[:pos]
+	}
+}

@@ -4,6 +4,7 @@ import (
 	"testing"
 	"fmt"
 	"reflect"
+	"net/url"
 )
 
 func TestCrawler_1(t *testing.T) {
@@ -22,6 +23,7 @@ func TestCrawler_1(t *testing.T) {
 }
 
 func TestCrawler_2(t *testing.T) {
+
 	config := NewConfiguration()
 	crawler := NewCrawler(config)
 	result := crawler.Crawl("http://www.ejbyurterne.dk/graphics/logo.jpg")
@@ -40,4 +42,36 @@ func TestCrawler_2(t *testing.T) {
 		println("REUSLT:", len(r.Content.bytes.Bytes()))
 		r.Download("temp/")
 	}
+}
+
+func TestCombineURL(t *testing.T) {
+	tests := []struct {
+		url string
+		anchor string
+		expected string
+	}{
+		{"http://www.a.dk/index.php?pid=main", "index.php?pid=next", "http://www.a.dk/index.php?pid=next"},
+	}
+
+	for i, test := range tests {
+		l1, err := url.Parse(test.url)
+		if err != nil {
+			t.Errorf("Failed test #%v, %v", i, err)
+		}
+		l2, err := url.Parse(test.anchor)
+		if err != nil {
+			t.Errorf("Failed test #%v, %v", i, err)
+		}
+		u, err := combineURL(l1, l2)
+		if err != nil {
+			t.Errorf("Failed test #%v, %v", i, err)
+		}
+
+		if test.expected != u.String() {
+			t.Errorf("Failed test #%v,\nExpected: %v\nActual  : %v", i, test.expected, u.String())
+		}
+
+		fmt.Printf("%v == %v\n", test.expected, u.String())
+	}
+
 }

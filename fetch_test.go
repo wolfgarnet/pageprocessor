@@ -5,13 +5,15 @@ import (
 	"io"
 	"os"
 	"fmt"
+	"net/url"
 )
 
 func TestFetcher(t *testing.T) {
-	url := "http://seventyeight.org/78.png"
+	url1 := "http://seventyeight.org/78.png"
+	link, _ := url.Parse(url1)
 
 	fetcher := &Fetcher{}
-	download, err := fetcher.Fetch(url)
+	download, err := fetcher.Fetch(link)
 
 	if err != nil {
 		fmt.Errorf(err.Error())

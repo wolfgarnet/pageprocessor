@@ -12,5 +12,5 @@ func TestParser(t *testing.T) {
 		fmt.Errorf("%v", err)
 	}
 
-	println("IMAGE", parser.Images[0].Url)
+	println("IMAGE", parser.Images[0].URL.String())
 }

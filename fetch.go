@@ -66,13 +66,7 @@ func isDocumentType(download *Download) bool {
 	}
 }
 
-func (f *Fetcher) Fetch(link string) (*Download, error) {
-	fileURL, err := url.Parse(link)
-
-	if err != nil {
-		return nil, err
-	}
-
+func (f *Fetcher) Fetch(fileURL *url.URL) (*Download, error) {
 	for _, filter := range f.config.Filters.URLFilters {
 		if !filter.FilterURL(fileURL) {
 			return nil, fmt.Errorf("URL filter, %v, failed")
@@ -83,10 +77,6 @@ func (f *Fetcher) Fetch(link string) (*Download, error) {
 
 	segments := strings.Split(path, "/")
 
-	if err != nil {
-		return nil, err
-	}
-
 	check := http.Client{
 		CheckRedirect: func(r *http.Request, via []*http.Request) error {
 			r.URL.Opaque = r.URL.Path
@@ -94,7 +84,7 @@ func (f *Fetcher) Fetch(link string) (*Download, error) {
 		},
 	}
 
-	resp, err := check.Get(link) // add a filter to check redirect
+	resp, err := check.Get(fileURL.String()) // add a filter to check redirect
 
 	if err != nil {
 		return nil, err
