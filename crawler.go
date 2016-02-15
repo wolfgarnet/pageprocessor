@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"io/ioutil"
 	"strings"
+	"os"
 )
 
 type Filters struct  {
@@ -63,6 +64,11 @@ type DownloadableResult struct {
 }
 
 func (d *DownloadableResult) Download(path string) {
+	fmt.Printf("PATH IS : %v\n", path)
+	if !os.IsPathSeparator(path[len(path)-1]) {
+		path = fmt.Sprintf("%v%c",path, os.PathSeparator)
+		fmt.Printf("PATH IS NOW; %v\n", path)
+	}
 	target := path + d.Content.Filename
 	fmt.Printf("Writing to %v\n", target)
 	err := ioutil.WriteFile(target, d.Content.bytes.Bytes(), 0644)
@@ -76,6 +82,7 @@ func (d *DownloadableResult) Process() CrawlResult {
 }
 
 type PageResult struct {
+	Title string
 	Links  []*Link
 	Images []*Img
 }
@@ -119,7 +126,7 @@ func (c *Crawler) Crawl(urlString string) (result CrawlResult) {
 			return &Failure{err}
 		}
 
-		ir := &PageResult{}
+		ir := &PageResult{Title:parser.Title}
 		for _, link := range parser.Links  {
 			for _, rule := range c.Config.Filters.FollowRules {
 				if rule.Follow(link.URL) {

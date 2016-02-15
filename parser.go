@@ -34,6 +34,7 @@ type (
 )
 
 type HtmlParser struct {
+	Title string
 	Links  []*Link
 	Images []*Img
 }
@@ -69,6 +70,11 @@ func (hp *HtmlParser) parse(node *html.Node) {
 		case "img":
 			img := hp.parseImg(node)
 			hp.Images = append(hp.Images, img)
+
+		case "title":
+			if node.FirstChild != nil {
+				hp.Title = node.FirstChild.Data
+			}
 		}
 	}
 
