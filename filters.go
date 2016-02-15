@@ -44,7 +44,7 @@ type PageExtensionFilter struct  {
 	Allowed bool
 }
 
-func (pef *PageExtensionFilter) FilterURL(url *url.URL) bool {
+func (pef *PageExtensionFilter) FilterURL(url, parent *url.URL) bool {
 	for _, ext := range pef.Extensions {
 		if url.Fragment == ext {
 			return pef.Allowed
@@ -61,7 +61,7 @@ type KeywordRuleFilter struct {
 	Blacklist []string
 }
 
-func (kw *KeywordRuleFilter) FilterURL(url *url.URL) bool {
+func (kw *KeywordRuleFilter) FilterURL(url, parent *url.URL) bool {
 	upper := strings.ToUpper(url.String())
 	counted := 0
 	for _, w := range kw.Whitelist {
@@ -80,6 +80,19 @@ func (kw *KeywordRuleFilter) FilterURL(url *url.URL) bool {
 		if strings.ToUpper(b) == upper {
 			return false
 		}
+	}
+
+	return true
+}
+
+// No cross site crawl
+
+type NoCrossSiteCrawl struct {
+}
+
+func (ncsc *NoCrossSiteCrawl) FilterURL(url, parent *url.URL) bool {
+	if url.Host != parent.Host {
+		return false
 	}
 
 	return true

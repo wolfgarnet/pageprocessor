@@ -40,7 +40,7 @@ type Crawler struct {
 }
 
 type URLFilter interface {
-	FilterURL(url *url.URL) bool
+	FilterURL(url, parent *url.URL) bool
 }
 
 type FileFilter interface {
@@ -64,13 +64,10 @@ type DownloadableResult struct {
 }
 
 func (d *DownloadableResult) Download(path string) {
-	fmt.Printf("PATH IS : %v\n", path)
 	if !os.IsPathSeparator(path[len(path)-1]) {
 		path = fmt.Sprintf("%v%c",path, os.PathSeparator)
-		fmt.Printf("PATH IS NOW; %v\n", path)
 	}
 	target := path + d.Content.Filename
-	fmt.Printf("Writing to %v\n", target)
 	err := ioutil.WriteFile(target, d.Content.bytes.Bytes(), 0644)
 	if err != nil {
 		fmt.Printf("WHAAAAAAT!? %v\n", err)
@@ -109,11 +106,11 @@ func (d *Failure) Process() CrawlResult {
 
 func (c *Crawler) Crawl(urlString string) (result CrawlResult) {
 	fmt.Printf("Crawling %v\n", urlString)
-	fileURL, err := url.Parse(urlString)
+	u, err := url.Parse(urlString)
 	if err != nil {
 		return &Failure{err}
 	}
-	download, err := c.Fetcher.Fetch(fileURL)
+	download, err := c.Fetcher.Fetch(u)
 	if err != nil {
 		return &Failure{err}
 	}
@@ -136,19 +133,23 @@ func (c *Crawler) Crawl(urlString string) (result CrawlResult) {
 		}
 
 		for _, img := range parser.Images {
-			realURL, err := combineURL(fileURL, img.URL)
+			realURL, err := combineURL(u, img.URL)
 			if err != nil {
 				fmt.Printf("Failed to add %v, %v\n", img.URL, err)
 			}
-			ir.Images = append(ir.Images, &Img{realURL})
+			if c.accept(realURL, u) {
+				ir.Images = append(ir.Images, &Img{realURL})
+			}
 		}
 
 		for _, link := range parser.Links {
-			realURL, err := combineURL(fileURL, link.URL)
+			realURL, err := combineURL(u, link.URL)
 			if err != nil {
 				fmt.Printf("Failed to add %v, %v\n", link.URL, err)
 			}
-			ir.Links = append(ir.Links, &Link{realURL})
+			if c.accept(realURL, u) {
+				ir.Links = append(ir.Links, &Link{realURL})
+			}
 		}
 
 		result = ir
@@ -158,6 +159,18 @@ func (c *Crawler) Crawl(urlString string) (result CrawlResult) {
 	}
 
 	return
+}
+
+
+func (c *Crawler) accept(u, parent *url.URL) bool {
+	for _, filter := range c.Config.Filters.URLFilters {
+		if !filter.FilterURL(u, parent) {
+			fmt.Printf("URL filter, %v, failed %v\n", filter, u)
+			return false
+		}
+	}
+
+	return true
 }
 
 func combineURL(base, sub *url.URL) (*url.URL, error) {

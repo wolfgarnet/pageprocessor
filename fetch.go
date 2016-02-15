@@ -67,12 +67,6 @@ func isDocumentType(download *Download) bool {
 }
 
 func (f *Fetcher) Fetch(fileURL *url.URL) (*Download, error) {
-	for _, filter := range f.config.Filters.URLFilters {
-		if !filter.FilterURL(fileURL) {
-			return nil, fmt.Errorf("URL filter, %v, failed")
-		}
-	}
-
 	path := fileURL.Path
 
 	segments := strings.Split(path, "/")
