@@ -155,6 +155,7 @@ func (c *Crawler) Crawl(urlString string) (result CrawlResult) {
 		result = ir
 	} else {
 		fmt.Printf("DOWNLOAD\n")
+		// Check downloaded file
 		result = &DownloadableResult{download}
 	}
 

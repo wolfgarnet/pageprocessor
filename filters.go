@@ -3,6 +3,8 @@ package html2
 import (
 	"net/url"
 	"strings"
+	"image"
+	"io"
 )
 
 func findFilters(f interface{}, filters *Filters) {
@@ -63,23 +65,23 @@ type KeywordRuleFilter struct {
 
 func (kw *KeywordRuleFilter) FilterURL(url, parent *url.URL) bool {
 	upper := strings.ToUpper(url.String())
-	counted := 0
-	for _, w := range kw.Whitelist {
-		if strings.ToUpper(w) == upper {
-			return true
-		}
 
-		counted++
-	}
-
-	if counted > 0 {
-		return false
-	}
-
+	// Black list takes precedence
 	for _, b := range kw.Blacklist {
-		if strings.ToUpper(b) == upper {
+		if strings.Contains(upper, strings.ToUpper(b)) {
 			return false
 		}
+	}
+
+	for _, w := range kw.Whitelist {
+		if strings.Contains(upper, strings.ToUpper(w)) {
+			return true
+		}
+	}
+
+	// If no white listed terms were found, fail
+	if len(kw.Whitelist) > 0 {
+		return false
 	}
 
 	return true
@@ -96,4 +98,14 @@ func (ncsc *NoCrossSiteCrawl) FilterURL(url, parent *url.URL) bool {
 	}
 
 	return true
+}
+
+//
+
+func getImageDimension(r io.Reader) (int, int, error) {
+	image, _, err := image.DecodeConfig(r)
+	if err != nil {
+		return -1, -1, err
+	}
+	return image.Width, image.Height, nil
 }
